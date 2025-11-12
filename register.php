@@ -12,6 +12,7 @@ try{
         $email = $_POST['email'];
         $password = $_POST['password'];
         $confim_password = $_POST['confirm_pass'];
+        $phone = $_POST['phone'];
 
         if(empty($name) || empty($email) || empty($password) || empty($confirm_password)){
             throw new Exception("All field are required");
@@ -37,10 +38,24 @@ try{
 
         $hashedpass = password_hash($password,PASSWORD_DEFAULT);
         $role = "customer";
+        $status = "active";
+
+        $insertsql = "INSERT INTO users ('namw','email','password','phone','role') VALUES (?,?,?,?,NOW())";
         
+        $insertsql = $conn->prepare($insertsql);
+        $insertsql->bind_param("sssss",$name,$email,$password,$phone,$role);
+
+        if(!$insertsql->execute()){
+            throw new Exception("Database insert failed:" . $conn->error);
+        }
+
+        $success = "Account registered successfully";
     }
 }catch(Exception $e){
-    
+    $error = $e->getMessage();
+
+    $logmsg = "[".date('Y-m-d H:i:s')."] REGISTER ERROR: " .$error." | Email: ".($email ?? '.')."e";
+    file_put_contents("error_log.txt",$logmsg, FILE_APPEND);
 }
 
 
